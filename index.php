@@ -6,7 +6,10 @@ spl_autoload_register(function ($class) {
     require __DIR__ . "/src/$class.php";
 });
 
-header("Contenr-type: application/json; charset= UTF-8");
+set_error_handler("ErrorHandler::handleError");
+set_exception_handler("ErrorHandler::handleException");
+
+header("Content-type: application/json; charset= UTF-8");
 
 $parts = explode("/", $_SERVER["REQUEST_URI"]);
 
@@ -17,6 +20,12 @@ if ($parts[2] != "products") {
 
 $id = $parts[3] ?? null;
 
-$controller = new ProductController;
+$database = new Database("localhost", "product_db", "root", "");
+
+$database->getConnection();
+
+$gateway = new ProductGateway($database);
+
+$controller = new ProductController($gateway);
 
 $controller->processRequest($_SERVER["REQUEST_METHOD"], $id);
